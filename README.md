@@ -39,21 +39,30 @@ If a non-empty manifest is found, a report similar to the following will be prod
 
 ```sh
 $ npm-malice-audit
-Auditing...
+---------
+| async |
+---------
+Audited 673 packages.
+Completed in 79.481 seconds.
+Found 0 malicious packages in the tree!
 ----------
 | lodash |
 ----------
-Completed in 0.217 seconds.
+Audited 1 packages.
+Completed in 0.202 seconds.
 Found 0 malicious packages in the tree!
 -----------------
 | npm-remote-ls |
 -----------------
-Completed in 7.121 seconds.
+Audited 405 packages.
+Completed in 42.203 seconds.
 Found 0 malicious packages in the tree!
-======================================
-Audited 2 total packages.
-Completed audit in 7.141 seconds.
+= SUMMARY ==============================
+Audited 1079 total packages.
+Completed audit in 121.899 seconds.
 Found a total of 0 malicious packages!
 ```
+
+You may also see an `= ERRORS =` section above the `= SUMMARY =`. This includes messages logged when there are problems looking up packages.
 
 **Note:** Large packages with many dependencies can take a _long_ time to resolve due to the need for _many_ requests - patience is a virtue!
