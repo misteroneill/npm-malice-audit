@@ -8,39 +8,32 @@ const path = require('path');
 const remote = require('npm-remote-ls');
 const malicious = require('./malicious.json');
 
-const bail = (msg) => {
-  console.error(msg);
-  process.exit(1);
-};
-
-const detect = (obj) => {
-  const keys = Object.keys(obj);
-};
-
 let manifest;
 
 try {
   manifest = require(path.resolve(process.cwd(), 'npm-malice-audit.json'));
 } catch (x) {
-  bail('Could not load npm-malice-audit.json, please make sure it exists and contains valid JSON!');
+  try {
+    const pkg = require(path.resolve(process.cwd(), 'package.json'));
+
+    manifest = _.uniq(
+      Object.keys(pkg.dependencies || {})
+        .concat(Object.keys(pkg.devDependencies || {}))
+        .concat(Object.keys(pkg.peerDependencies || {}))
+        .concat(Object.keys(pkg.optionalDependencies || {}))
+    );
+  } catch (x) {
+    console.error('No npm-malice-audit.json or package.json found! Please refer to the README for usage.');
+    process.exit(1);
+  }
 }
 
-if (!Array.isArray(manifest)) {
-  bail('The npm-malice-audit.json file must contain an array!');
-}
-
-manifest = manifest.filter(item => typeof item === 'string');
-
-if (!manifest.length) {
-  bail('The npm-malice-audit.json file must contain strings!');
+if (!Array.isArray(manifest) || !manifest.length) {
+  console.warn('No packages specified in either npm-malice-audit.json or package.json');
+  process.exit(0);
 }
 
 remote.config({
-
-  // Silence messages from npm-remote-ls.
-  // logger: {
-  //   log: () => {}
-  // },
 
   // We want _all_ dependencies.
   development: true,
@@ -50,7 +43,7 @@ remote.config({
 
 console.log('Auditing...');
 
-manifest.forEach(item => {
+manifest.filter(item => typeof item === 'string').forEach(item => {
   const start = Date.now();
 
   remote.ls(item, 'latest', function(result) {
