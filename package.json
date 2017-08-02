@@ -1,0 +1,19 @@
+{
+  "name": "npm-malice-audit",
+  "version": "0.0.0",
+  "description": "Audits npm packages for any known-malicious package names.",
+  "main": "index.js",
+  "bin": {
+    "npm-malice-audit": "index.js"
+  },
+  "scripts": {
+    "test": "exit 0"
+  },
+  "author": "Pat O'Neill <pgoneill@gmail.com>",
+  "repository": "https://github.com/misteroneill/npm-malice-audit.git",
+  "license": "MIT",
+  "dependencies": {
+    "lodash": "^4.17.4",
+    "npm-remote-ls": "^1.3.2"
+  }
+}
