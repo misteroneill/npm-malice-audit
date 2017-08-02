@@ -35,35 +35,59 @@ if (!Array.isArray(manifest) || !manifest.length) {
 
 remote.config({
 
+  // Silence npm-remote-ls messages.
+  logger: {
+    log: () => {}
+  },
+
   // We want _all_ dependencies.
   development: true,
   optional: true,
   peer: true
 });
 
+const stats = {
+  count: 0,
+  detected: 0,
+  start: Date.now()
+};
+
 console.log('Auditing...');
 
-manifest.filter(item => typeof item === 'string').forEach(item => {
-  const start = Date.now();
+Promise.all(manifest.filter(item => typeof item === 'string').map(item => {
+  return new Promise((resolve, reject) => {
+    const start = Date.now();
 
-  remote.ls(item, 'latest', function(result) {
-    const flattened = _.uniq(
-      _.flattenDeep(_.toPairs(result))
-        .filter(v => typeof v === 'string')
-        .map(v => v.split('@')[0])
-    );
+    remote.ls(item, 'latest', true, function(result) {
+      result = _.uniq(result.filter(v => typeof v === 'string').map(v => v.split('@')[0]));
 
-    const time = Date.now() - start;
-    const name = `| ${item} |`;
-    const bar = '-'.repeat(name.length);
-    const detected = flattened.filter(v => malicious.indexOf(v) !== -1);
+      const time = Date.now() - start;
+      const name = `| ${item} |`;
+      const bar = '-'.repeat(name.length);
+      const detected = result.filter(v => malicious.indexOf(v) !== -1);
 
-    console.log([
-      bar,
-      name,
-      bar,
-      `Completed in ${time / 1000} seconds.`,
-      `Found ${detected.length} malicious packages in the tree!`
-    ].concat(detected.map(v => `- ${v}`)).join(os.EOL));
+      stats.count += result.length;
+      stats.detected += detected;
+
+      console.log([
+        bar,
+        name,
+        bar,
+        `Audited ${result.length} packages.`,
+        `Completed in ${time / 1000} seconds.`,
+        `Found ${detected.length} malicious packages in the tree!`
+      ].concat(detected.map(v => `- ${v}`)).join(os.EOL));
+
+      resolve();
+    });
   });
+})).then(results => {
+  const output = [
+    `Audited ${stats.count} total packages.`,
+    `Completed audit in ${(Date.now() - stats.start) / 1000} seconds.`,
+    `Found a total of ${stats.detected} malicious packages!`
+  ];
+
+  output.unshift('='.repeat(Math.max.apply(Math, output.map(s => s.length))));
+  console.log(output.join(os.EOL));
 });
