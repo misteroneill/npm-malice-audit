@@ -37,7 +37,7 @@ Second, the tool will look for a `package.json` file and use all of its `depende
 
 If a non-empty manifest is found, a report similar to the following will be produced:
 
-```sh
+```
 $ npm-malice-audit
 ---------
 | async |
