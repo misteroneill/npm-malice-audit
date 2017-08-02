@@ -33,11 +33,16 @@ if (!Array.isArray(manifest) || !manifest.length) {
   process.exit(0);
 }
 
+// Save logs for the end.
+const logs = [];
+
 remote.config({
 
-  // Silence npm-remote-ls messages.
+  // Silence npm-remote-ls messages until the end.
   logger: {
-    log: () => {}
+    log: function() {
+      logs.push(_.toArray(arguments).join(' '));
+    }
   },
 
   // We want _all_ dependencies.
@@ -82,12 +87,17 @@ Promise.all(manifest.filter(item => typeof item === 'string').map(item => {
     });
   });
 })).then(results => {
-  const output = [
-    `Audited ${stats.count} total packages.`,
-    `Completed audit in ${(Date.now() - stats.start) / 1000} seconds.`,
-    `Found a total of ${stats.detected} malicious packages!`
-  ];
+  if (logs.length) {
+    logs.unshift('= ERRORS =' + ('='.repeat(30)));
+  }
 
-  output.unshift('='.repeat(Math.max.apply(Math, output.map(s => s.length))));
+  const output = logs
+    .concat([
+      '= SUMMARY =' + ('='.repeat(29)),
+      `Audited ${stats.count} total packages.`,
+      `Completed audit in ${(Date.now() - stats.start) / 1000} seconds.`,
+      `Found a total of ${stats.detected} malicious packages!`
+    ]);
+
   console.log(output.join(os.EOL));
 });
